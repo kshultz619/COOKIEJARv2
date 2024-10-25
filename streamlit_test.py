@@ -46,7 +46,7 @@ if token:
             crude_purity = None  # Initialize crude purity field
 
             # Debug: Print the available custom field names
-            st.write(f"Custom fields for task {task_name}: {[field['name'] for field in custom_fields]}")
+            # st.write(f"Custom fields for task {task_name}: {[field['name'] for field in custom_fields]}")
 
             for field in custom_fields:
                 field_name = field['name']  # Get the name of the custom field
