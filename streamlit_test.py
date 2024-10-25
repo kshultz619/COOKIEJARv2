@@ -1,6 +1,7 @@
 import asana
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
 from asana import ApiClient, Configuration
 from asana.rest import ApiException
 
@@ -42,25 +43,56 @@ if token:
 
             custom_fields = task_details.get('custom_fields', [])
             task_info = {'Task Name': task_name}
+            crude_purity = None  # Initialize crude purity field
+
             for field in custom_fields:
                 field_name = field['name']  # Get the name of the custom field
-                # Check if it's a dropdown field
-                if field['type'] == 'enum':
-                    # For dropdown (enum) fields, get the selected option name
-                    field_value = field.get('enum_value', {}).get('name', 'N/A')
+                if field_name == 'crude purity':
+                    # Check if it's a number field
+                    field_value = field.get('number_value')
+                    if field_value is not None:
+                        crude_purity = field_value
                 else:
-                    # Handle other field types (text, number)
+                    # Handle other custom fields
                     field_value = field.get('text_value') or field.get('number_value') or 'N/A'
-
+                
                 task_info[field_name] = field_value  # Store the name and value in task_info dict
 
-            task_data.append(task_info)
+            # Append only tasks with crude purity data
+            if crude_purity is not None:
+                task_info['crude purity'] = crude_purity
+                task_data.append(task_info)
 
         # Create a DataFrame from the collected task data
         df = pd.DataFrame(task_data)
 
         # Display the DataFrame in Streamlit
         st.write(df)
+
+        # Extract crude purity data for SPC chart
+        crude_purity_values = df['crude purity'].astype(float)
+
+        # Calculate mean, UCL, and LCL
+        mean = crude_purity_values.mean()
+        std_dev = crude_purity_values.std()
+        UCL = mean + 3 * std_dev  # Upper control limit (mean + 3*std)
+        LCL = mean - 3 * std_dev  # Lower control limit (mean - 3*std)
+
+        # Create the SPC chart using matplotlib
+        fig, ax = plt.subplots()
+
+        ax.plot(crude_purity_values, marker='o', linestyle='-', color='b', label='Crude Purity')
+        ax.axhline(mean, color='green', linestyle='--', label='Mean')
+        ax.axhline(UCL, color='red', linestyle='--', label='Upper Control Limit (UCL)')
+        ax.axhline(LCL, color='red', linestyle='--', label='Lower Control Limit (LCL)')
+
+        ax.set_title('SPC Chart for Crude Purity')
+        ax.set_xlabel('Sample Number')
+        ax.set_ylabel('Crude Purity')
+        ax.legend()
+
+        # Display the plot in Streamlit
+        st.pyplot(fig)
 
     except ApiException as e:
         st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
