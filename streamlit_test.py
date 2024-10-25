@@ -84,37 +84,40 @@ if token:
                 filtered_df = df
 
             if field_name in filtered_df.columns:
-                # Extract selected field data
-                selected_data = filtered_df[field_name].astype(float)
+                # Extract selected field data and drop any missing values (NaN)
+                selected_data = filtered_df[field_name].dropna().astype(float)
 
-                # Calculate mean, UCL, and LCL for selected field
-                mean = selected_data.mean()
-                std_dev = selected_data.std()
-                UCL = mean + 3 * std_dev  # Upper control limit (mean + 3*std)
-                LCL = mean - 3 * std_dev  # Lower control limit (mean - 3*std)
+                if not selected_data.empty:
+                    # Calculate mean, UCL, and LCL for selected field
+                    mean = selected_data.mean()
+                    std_dev = selected_data.std()
+                    UCL = mean + 3 * std_dev  # Upper control limit (mean + 3*std)
+                    LCL = mean - 3 * std_dev  # Lower control limit (mean - 3*std)
 
-                # Create the SPC chart using matplotlib
-                fig, ax = plt.subplots()
+                    # Create the SPC chart using matplotlib
+                    fig, ax = plt.subplots()
 
-                # Loop through the data and color the points based on their values
-                for i, value in enumerate(selected_data):
-                    if LCL <= value <= UCL:
-                        ax.plot(i, value, marker='o', color='green')  # Within ±3 std.dev
-                    else:
-                        ax.plot(i, value, marker='o', color='red')  # Outside ±3 std.dev
+                    # Loop through the data and color the points based on their values
+                    for i, value in enumerate(selected_data):
+                        if LCL <= value <= UCL:
+                            ax.plot(i, value, marker='o', color='green')  # Within ±3 std.dev
+                        else:
+                            ax.plot(i, value, marker='o', color='red')  # Outside ±3 std.dev
 
-                # Plot control lines and limits
-                ax.axhline(mean, color='green', linestyle='--', label='Mean')
-                ax.axhline(UCL, color='red', linestyle='--', label='Upper Control Limit (UCL)')
-                ax.axhline(LCL, color='red', linestyle='--', label='Lower Control Limit (LCL)')
+                    # Plot control lines and limits
+                    ax.axhline(mean, color='green', linestyle='--', label='Mean')
+                    ax.axhline(UCL, color='red', linestyle='--', label='Upper Control Limit (UCL)')
+                    ax.axhline(LCL, color='red', linestyle='--', label='Lower Control Limit (LCL)')
 
-                ax.set_title(f'SPC Chart for {field_name}')
-                ax.set_xlabel('Sample Number')
-                ax.set_ylabel(field_name)
-                ax.legend()
+                    ax.set_title(f'SPC Chart for {field_name}')
+                    ax.set_xlabel('Sample Number')
+                    ax.set_ylabel(field_name)
+                    ax.legend()
 
-                # Display the plot in Streamlit
-                st.pyplot(fig)
+                    # Display the plot in Streamlit
+                    st.pyplot(fig)
+                else:
+                    st.warning(f"No data available for {field_name}")
 
         # Pre-defined SPC charts for specific fields, each with its own filter
         create_spc_chart(df, 'Crude Purity (%)')
