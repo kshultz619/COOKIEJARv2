@@ -22,11 +22,9 @@ primer_parts = {
     20028144: {'description': 'P15T6', 'length': 36}
 }
 
-
 # Function to calculate Coupling Efficiency
 def coupling_efficiency(length, crude_purity):
     return (crude_purity / 1000) ** (1 / (length - 1))
-
 
 # Streamlit UI for input
 st.title('Welcome to Kevin\'s Cake Factory!')
@@ -105,15 +103,13 @@ if token:
         # Display the DataFrame in Streamlit
         st.write(df)
 
-
         # Function to create and display SPC chart for a given field with its own filter
         def create_spc_chart(df, field_name):
             st.write(f'SPC Chart for {field_name}')
 
             # Create a dropdown to filter by 'Material Number', with an option to show all data
             unique_materials = ['All'] + df['Material Number'].dropna().unique().tolist()
-            selected_material = st.selectbox(f'Select Material Number to filter {field_name} by:', unique_materials,
-                                             key=field_name)
+            selected_material = st.selectbox(f'Select Material Number to filter {field_name} by:', unique_materials, key=field_name)
 
             # Filter the DataFrame based on the selected 'Material Number', or show all if 'All' is selected
             if selected_material != 'All':
@@ -156,4 +152,30 @@ if token:
                         ))
 
                     # Add mean, UCL, and LCL lines
+                    fig.add_hline(y=mean, line=dict(color='green', dash='dash'), name='Mean')
+                    fig.add_hline(y=UCL, line=dict(color='red', dash='dash'), name='Upper Control Limit (UCL)')
+                    fig.add_hline(y=LCL, line=dict(color='red', dash='dash'), name='Lower Control Limit (LCL)')
 
+                    # Update layout for the plot
+                    fig.update_layout(
+                        title=f'SPC Chart for {field_name}',
+                        xaxis_title='Sample Number',
+                        yaxis_title=field_name,
+                        legend_title='Legend'
+                    )
+
+                    # Display the plot in Streamlit
+                    st.plotly_chart(fig)
+                else:
+                    st.warning(f"No data available for {field_name}")
+
+        # Pre-defined SPC charts for specific fields, each with its own filter
+        create_spc_chart(df, 'Crude Purity (%)')
+        create_spc_chart(df, 'Crude Yield (OD)')
+        create_spc_chart(df, 'Final Purity (%)')
+        create_spc_chart(df, 'Final Yield (µMol)')
+
+    except ApiException as e:
+        st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
+    except Exception as ex:
+        st.error(f"An error occurred: {ex}")
