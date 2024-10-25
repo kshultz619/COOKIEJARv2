@@ -69,20 +69,23 @@ if token:
         # Display the DataFrame in Streamlit
         st.write(df)
 
-        # Create filter dropdowns based on unique values in certain fields
-        filter_field = st.selectbox('Filter tasks by:', df.columns)
-        unique_values = df[filter_field].unique()
-        selected_value = st.selectbox(f'Select {filter_field} value to filter by:', unique_values)
-
-        # Filter the DataFrame based on selected field and value
-        filtered_df = df[df[filter_field] == selected_value]
-
-        # Function to create and display SPC chart for a given field
+        # Function to create and display SPC chart for a given field with its own filter
         def create_spc_chart(df, field_name):
             st.write(f'SPC Chart for {field_name}')
-            if field_name in df.columns:
+
+            # Create a dropdown to filter by 'Material Number', with an option to show all data
+            unique_materials = ['All'] + df['Material Number'].dropna().unique().tolist()
+            selected_material = st.selectbox(f'Select Material Number to filter {field_name} by:', unique_materials, key=field_name)
+
+            # Filter the DataFrame based on the selected 'Material Number', or show all if 'All' is selected
+            if selected_material != 'All':
+                filtered_df = df[df['Material Number'] == selected_material]
+            else:
+                filtered_df = df
+
+            if field_name in filtered_df.columns:
                 # Extract selected field data
-                selected_data = df[field_name].astype(float)
+                selected_data = filtered_df[field_name].astype(float)
 
                 # Calculate mean, UCL, and LCL for selected field
                 mean = selected_data.mean()
@@ -113,15 +116,11 @@ if token:
                 # Display the plot in Streamlit
                 st.pyplot(fig)
 
-        # Pre-defined SPC charts for specific fields
-        create_spc_chart(filtered_df, 'Crude Purity (%)')
-        create_spc_chart(filtered_df,'Crude Yield (OD)')
-        create_spc_chart(filtered_df,'Final Purity (%)')
-        create_spc_chart(filtered_df,'Final Yield (µMol)')
-        
-        # You can add more pre-generated SPC charts by calling `create_spc_chart` with other fields
-        # For example:
-        # create_spc_chart(filtered_df, 'Another Custom Field')
+        # Pre-defined SPC charts for specific fields, each with its own filter
+        create_spc_chart(df, 'Crude Purity (%)')
+        create_spc_chart(df, 'Crude Yield (OD)')
+        create_spc_chart(df, 'Final Purity (%)')
+        create_spc_chart(df, 'Final Yield (µMol)')
 
     except ApiException as e:
         st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
