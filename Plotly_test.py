@@ -171,6 +171,7 @@ if token:
 
         # Pre-defined SPC charts for specific fields, each with its own filter
         create_spc_chart(df, 'Crude Purity (%)')
+        create_spc_chart(df, 'Coupling Efficiency')
         create_spc_chart(df, 'Crude Yield (OD)')
         create_spc_chart(df, 'Final Purity (%)')
         create_spc_chart(df, 'Final Yield (µMol)')
