@@ -67,7 +67,15 @@ if token:
                 continue
 
             # Safely get completion date and assignee (Oligo Pilot)
-            completion_date = task_details.get('completed_at', None)
+            completion_date_str = task_details.get('completed_at')
+            completion_date = None
+            if completion_date_str:
+                try:
+                    # Explicitly parse the date using the known format
+                    completion_date = pd.to_datetime(completion_date_str, format='%m/%d/%y', errors='coerce')
+                except Exception as e:
+                    st.warning(f"Failed to parse Completion Date '{completion_date_str}' for task '{task_name}': {e}")
+
             oligo_pilot = task_details.get('assignee', {}).get('name', 'Unknown')
 
             custom_fields = task_details.get('custom_fields', []) or []
@@ -111,9 +119,6 @@ if token:
 
         # Create a DataFrame from the collected task data
         df = pd.DataFrame(task_data)
-
-        # Convert 'Completion Date' to datetime, handling any errors
-        df['Completion Date'] = pd.to_datetime(df['Completion Date'], errors='coerce')
 
         # Display the DataFrame in Streamlit
         st.write(df)
