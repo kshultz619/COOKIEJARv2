@@ -63,7 +63,11 @@ if token:
             task_details = tasks_api.get_task(task_id, opts={})
 
             custom_fields = task_details.get('custom_fields', [])
-            task_info = {'Task Name': task_name}
+            task_info = {
+                'Task Name': task_name,
+                'Completion Date': task_details.get('completed_at'),  # Completion Date
+                'Oligo Pilot': task_details.get('assignee', {}).get('name')  # Assuming Oligo Pilot refers to assignee
+            }
             crude_purity = None  # Initialize crude purity field
             material_number = None  # Initialize material number
 
@@ -100,52 +104,63 @@ if token:
         # Create a DataFrame from the collected task data
         df = pd.DataFrame(task_data)
 
+        # Convert 'Completion Date' to datetime
+        df['Completion Date'] = pd.to_datetime(df['Completion Date'])
+
         # Display the DataFrame in Streamlit
         st.write(df)
 
         # Function to create and display SPC chart for a given field with its own filter
-        def create_spc_chart(df, field_name):
+        def create_spc_chart(df, field_name, filter_oligo=False):
             st.write(f'SPC Chart for {field_name}')
 
             # Create a dropdown to filter by 'Material Number', with an option to show all data
             unique_materials = ['All'] + df['Material Number'].dropna().unique().tolist()
             selected_material = st.selectbox(f'Select Material Number to filter {field_name} by:', unique_materials, key=field_name)
 
-            # Filter the DataFrame based on the selected 'Material Number', or show all if 'All' is selected
+            # Additional dropdown for 'Oligo Pilot' if filter_oligo is True
+            selected_oligo = None
+            if filter_oligo:
+                unique_oligos = ['All'] + df['Oligo Pilot'].dropna().unique().tolist()
+                selected_oligo = st.selectbox(f'Select Oligo Pilot to filter {field_name} by:', unique_oligos, key=field_name + '_oligo')
+
+            # Filter the DataFrame based on the selected 'Material Number' and 'Oligo Pilot'
+            filtered_df = df
             if selected_material != 'All':
-                filtered_df = df[df['Material Number'] == selected_material]
-            else:
-                filtered_df = df
+                filtered_df = filtered_df[filtered_df['Material Number'] == selected_material]
+            if filter_oligo and selected_oligo != 'All':
+                filtered_df = filtered_df[filtered_df['Oligo Pilot'] == selected_oligo]
 
             if field_name in filtered_df.columns:
                 # Extract selected field data and drop any missing values (NaN)
-                selected_data = filtered_df[field_name].dropna().astype(float)
+                filtered_df = filtered_df.dropna(subset=['Completion Date', field_name])
+                selected_data = filtered_df.sort_values('Completion Date')
 
                 if not selected_data.empty:
                     # Calculate mean, UCL, and LCL for selected field
-                    mean = selected_data.mean()
-                    std_dev = selected_data.std()
+                    mean = selected_data[field_name].mean()
+                    std_dev = selected_data[field_name].std()
                     UCL = mean + 3 * std_dev  # Upper control limit (mean + 3*std)
                     LCL = mean - 3 * std_dev  # Lower control limit (mean - 3*std)
 
                     # Create the SPC chart using Plotly
                     fig = go.Figure()
 
-                    # Add data points as scatter plot
+                    # Add data points as scatter plot with dates on x-axis
                     fig.add_trace(go.Scatter(
-                        x=selected_data.index,
-                        y=selected_data,
+                        x=selected_data['Completion Date'],
+                        y=selected_data[field_name],
                         mode='lines+markers',
                         marker=dict(color='blue'),
                         name=field_name
                     ))
 
                     # Loop through the data and color the points based on their values
-                    for i, value in enumerate(selected_data):
-                        color = 'green' if LCL <= value <= UCL else 'red'
+                    for _, row in selected_data.iterrows():
+                        color = 'green' if LCL <= row[field_name] <= UCL else 'red'
                         fig.add_trace(go.Scatter(
-                            x=[i],
-                            y=[value],
+                            x=[row['Completion Date']],
+                            y=[row[field_name]],
                             mode='markers',
                             marker=dict(color=color),
                             showlegend=False
@@ -159,7 +174,7 @@ if token:
                     # Update layout for the plot
                     fig.update_layout(
                         title=f'SPC Chart for {field_name}',
-                        xaxis_title='Sample Number',
+                        xaxis_title='Completion Date',
                         yaxis_title=field_name,
                         legend_title='Legend'
                     )
@@ -169,14 +184,7 @@ if token:
                 else:
                     st.warning(f"No data available for {field_name}")
 
-        # Pre-defined SPC charts for specific fields, each with its own filter
-        create_spc_chart(df, 'Crude Purity (%)')
-        create_spc_chart(df, 'Coupling Efficiency')
-        create_spc_chart(df, 'Crude Yield (OD)')
-        create_spc_chart(df, 'Final Purity (%)')
-        create_spc_chart(df, 'Final Yield (µMol)')
-
-    except ApiException as e:
-        st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
-    except Exception as ex:
-        st.error(f"An error occurred: {ex}")
+        # Pre-defined SPC charts with updated filters
+        create_spc_chart(df, 'Crude Purity (%)', filter_oligo=True)
+        create_spc_chart(df, 'Coupling Efficiency', filter_oligo=True)
+        create_spc_chart(df, 'Crude Yield (OD)', filter
