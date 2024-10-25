@@ -97,6 +97,9 @@ if token:
                     # Create the SPC chart using matplotlib
                     fig, ax = plt.subplots()
 
+                    # Plot data points and connect them with a line
+                    ax.plot(selected_data.index, selected_data, marker='o', linestyle='-', color='blue', label=field_name)
+
                     # Loop through the data and color the points based on their values
                     for i, value in enumerate(selected_data):
                         if LCL <= value <= UCL:
