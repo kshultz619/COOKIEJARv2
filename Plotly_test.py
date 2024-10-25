@@ -5,6 +5,27 @@ import plotly.graph_objects as go
 from asana import ApiClient, Configuration
 from asana.rest import ApiException
 
+# Dictionary containing material information
+primer_parts = {
+    15066464: {'description': 'P5T10', 'length': 40},
+    20012515: {'description': 'P5T10', 'length': 40},
+    15066466: {'description': 'P7T10', 'length': 35},
+    20012516: {'description': 'P7T10', 'length': 35},
+    15065092: {'description': 'P5T6', 'length': 36},
+    15065093: {'description': 'P7T6', 'length': 31},
+    15053684: {'description': 'SBS3', 'length': 32},
+    20015402: {'description': 'SBS3', 'length': 32},
+    15071282: {'description': 'P5CFR', 'length': 21},
+    20021635: {'description': 'P5CFR', 'length': 21},
+    15071281: {'description': 'P7CFR', 'length': 22},
+    20021636: {'description': 'P7CFR', 'length': 22},
+    20028144: {'description': 'P15T6', 'length': 36}
+}
+
+# Function to calculate Coupling Efficiency
+def coupling_efficiency(length, crude_purity):
+    return (crude_purity / 1000) ** (1 / (length - 1))
+
 # Streamlit UI for input
 st.title('Welcome to Kevin\'s Cake Factory!')
 
@@ -44,6 +65,7 @@ if token:
             custom_fields = task_details.get('custom_fields', [])
             task_info = {'Task Name': task_name}
             crude_purity = None  # Initialize crude purity field
+            material_number = None  # Initialize material number
 
             for field in custom_fields:
                 field_name = field['name']  # Get the name of the custom field
@@ -56,8 +78,16 @@ if token:
 
                 if field_name == 'Crude Purity (%)' and field.get('number_value') is not None:
                     crude_purity = field.get('number_value')
+                if field_name == 'Material Number' and field.get('number_value') is not None:
+                    material_number = int(field.get('number_value'))
 
                 task_info[field_name] = field_value
+
+            # Calculate coupling efficiency if crude_purity and material_number are available
+            if crude_purity is not None and material_number in primer_parts:
+                length = primer_parts[material_number]['length']
+                coupling_eff = coupling_efficiency(length, crude_purity)
+                task_info['Coupling Efficiency'] = coupling_eff
 
             if crude_purity is not None:
                 task_info['Crude Purity (%)'] = crude_purity
