@@ -60,7 +60,11 @@ if token:
             task_name = task.get('name', 'Unknown Task')  # Get task name
 
             # Retrieve full task details including custom fields
-            task_details = tasks_api.get_task(task_id, opts={})
+            try:
+                task_details = tasks_api.get_task(task_id, opts={})
+            except Exception as e:
+                st.warning(f"Failed to retrieve details for task {task_id}: {e}")
+                continue
 
             # Safely get completion date and assignee (Oligo Pilot)
             completion_date = task_details.get('completed_at', None)
@@ -108,8 +112,8 @@ if token:
         # Create a DataFrame from the collected task data
         df = pd.DataFrame(task_data)
 
-        # Convert 'Completion Date' to datetime
-        df['Completion Date'] = pd.to_datetime(df['Completion Date'])
+        # Convert 'Completion Date' to datetime, handling any errors
+        df['Completion Date'] = pd.to_datetime(df['Completion Date'], errors='coerce')
 
         # Display the DataFrame in Streamlit
         st.write(df)
