@@ -115,6 +115,10 @@ if token:
 
         # Pre-defined SPC charts for specific fields
         create_spc_chart(filtered_df, 'Crude Purity (%)')
+        create_spc_chart(filtered_df,'Crude Yield (OD)')
+        create_spc_chart(filtered_df,'Final Purity (%)')
+        create_spc_chart(filtered_df,'Final Yield (µMol)')
+        
         # You can add more pre-generated SPC charts by calling `create_spc_chart` with other fields
         # For example:
         # create_spc_chart(filtered_df, 'Another Custom Field')
