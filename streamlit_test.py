@@ -46,17 +46,22 @@ if token:
             crude_purity = None  # Initialize crude purity field
 
             # Debug: Print the available custom field names
-            # st.write(f"Custom fields for task {task_name}: {[field['name'] for field in custom_fields]}")
+            st.write(f"Custom fields for task {task_name}: {[field['name'] for field in custom_fields]}")
 
             for field in custom_fields:
                 field_name = field['name']  # Get the name of the custom field
+                
+                # Handle different types of fields
                 if field_name == 'Crude Purity (%)':
-                    # Check if it's a number field
+                    # Handle number fields
                     field_value = field.get('number_value')
                     if field_value is not None:
                         crude_purity = field_value
+                elif field['type'] == 'enum':
+                    # Handle dropdown (enum) fields
+                    field_value = field.get('enum_value', {}).get('name', 'N/A')
                 else:
-                    # Handle other custom fields
+                    # Handle text fields
                     field_value = field.get('text_value') or field.get('number_value') or 'N/A'
 
                 task_info[field_name] = field_value  # Store the name and value in task_info dict
