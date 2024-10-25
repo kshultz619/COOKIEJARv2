@@ -187,9 +187,9 @@ if token:
         # Pre-defined SPC charts with updated filters
         create_spc_chart(df, 'Crude Purity (%)', filter_oligo=True)
         create_spc_chart(df, 'Coupling Efficiency', filter_oligo=True)
-        create_spc_chart(df, 'Crude Yield (OD)',  filter_oligo=True)
-        create_spc_chart(df, 'Final Purity (%)', filter_oligo=True)
-        create_spc_chart(df, 'Final Yield (µMol)', filter_oligo=True)
+        create_spc_chart(df, 'Crude Yield (OD)', filter_oligo=True)
+        create_spc_chart(df, 'Final Purity (%)')
+        create_spc_chart(df, 'Final Yield (µMol)')
 
     except ApiException as e:
         st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
