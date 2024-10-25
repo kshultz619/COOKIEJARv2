@@ -49,6 +49,7 @@ packaging==24.1
 pandas==2.2.2
 pefile==2024.8.26
 pillow==10.4.0
+plotly
 protobuf==5.28.0
 pyarrow==17.0.0
 pycparser==2.22
