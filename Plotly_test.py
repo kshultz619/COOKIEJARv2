@@ -56,26 +56,30 @@ if token:
 
         # Iterate over each task and retrieve custom fields
         for task in tasks:
-            task_id = task['gid']  # Get task ID
-            task_name = task['name']  # Get task name
+            task_id = task.get('gid', '')  # Get task ID
+            task_name = task.get('name', 'Unknown Task')  # Get task name
 
             # Retrieve full task details including custom fields
             task_details = tasks_api.get_task(task_id, opts={})
 
-            custom_fields = task_details.get('custom_fields', [])
+            # Safely get completion date and assignee (Oligo Pilot)
+            completion_date = task_details.get('completed_at', None)
+            oligo_pilot = task_details.get('assignee', {}).get('name', 'Unknown')
+
+            custom_fields = task_details.get('custom_fields', []) or []
             task_info = {
                 'Task Name': task_name,
-                'Completion Date': task_details.get('completed_at'),  # Completion Date
-                'Oligo Pilot': task_details.get('assignee', {}).get('name')  # Assuming Oligo Pilot refers to assignee
+                'Completion Date': completion_date,
+                'Oligo Pilot': oligo_pilot
             }
             crude_purity = None  # Initialize crude purity field
             material_number = None  # Initialize material number
 
             for field in custom_fields:
-                field_name = field['name']  # Get the name of the custom field
+                field_name = field.get('name', 'Unknown')  # Get the name of the custom field
 
                 # Handle number, text, and dropdown fields
-                if field['type'] == 'enum':
+                if field.get('type') == 'enum':
                     field_value = field.get('enum_value', {}).get('name', 'N/A')
                 else:
                     field_value = field.get('text_value') or field.get('number_value') or 'N/A'
