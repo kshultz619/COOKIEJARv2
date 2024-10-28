@@ -29,7 +29,7 @@ def coupling_efficiency(length, crude_purity):
     return (crude_purity / 1000) ** (1 / (length - 1))
 
 # Streamlit UI for input
-st.title('Welcome to Kevin\'s SPC Chart Generator!')
+st.title('Welcome to Kevin\'s Cake Factory!')
 
 # Get token via Streamlit input
 token = st.text_input('Input your Asana token:')
