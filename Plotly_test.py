@@ -19,7 +19,9 @@ primer_parts = {
     20021635: {'description': 'P5CFR', 'length': 21},
     15071281: {'description': 'P7CFR', 'length': 22},
     20021636: {'description': 'P7CFR', 'length': 22},
-    20028144: {'description': 'P15T6', 'length': 36}
+    20028144: {'description': 'P15T6', 'length': 36},
+    15053681: {'description': 'Nextera', 'length': 33},
+    20015401: {'description': 'Nextera', 'length': 33}
 }
 
 # Function to calculate Coupling Efficiency
@@ -226,7 +228,7 @@ if token:
         create_spc_chart(df, 'Coupling Efficiency', oligo_pilot_filter=True)
         create_spc_chart(df, 'Crude Yield (OD)', oligo_pilot_filter=True)
         create_spc_chart(df, 'Final Purity (%)')
-        create_spc_chart(df, 'Final Yield (µMol)')
+        create_spc_chart(df, 'Final Yield (OD)')
 
     except ApiException as e:
         st.error(f"Exception when calling TasksApi->get_tasks_for_project: {e}")
